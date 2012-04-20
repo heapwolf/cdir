@@ -25,7 +25,7 @@ var stuff = {
     "json",
     "interacive",
     "prompt"
-  ]
+  ],
   "foo": function() { 
     return "node tests/test.js"
   }
