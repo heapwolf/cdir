@@ -1,5 +1,5 @@
 { 
-  "name" : "dir", 
+  "name" : "cdir", 
   "description" : "An interactive console.dir() for the terminal.",
   "tags" : [
     "console",
@@ -13,13 +13,13 @@
   "author" : "Paolo Fragomeni <paolo@nodejisu.com>",
   "repository" : { 
     "type" : "git",
-    "url" : "http://github.com/hij1nx/node-dir.git"
+    "url" : "http://github.com/hij1nx/cdir.git"
   },
   "bugs" : { 
-    "url" : "http://github.com/hij1nx/node-dir/issues" 
+    "url" : "http://github.com/hij1nx/cdir/issues" 
   },
   "engines" : ["node >= 0.6.x"],
-  "main" : "./dir",
+  "main" : "./cdir",
   "scripts": { 
     "test": "node tests/test.js"
   }

@@ -1,5 +1,5 @@
 
-console.dir = require('../dir');
+console.dir = require('../cdir');
 
 var stuff = { 
   "name" : "dir", 

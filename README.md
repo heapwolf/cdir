@@ -16,7 +16,7 @@ There is a CLI version too if you want to use it. `npm install cdir -g`.
 console.dir = require('../dir');
 
 var stuff = { 
-  "name" : "dir", 
+  "name" : "cdir", 
   "description" : "An interactive console.dir() for the terminal.",
   "tags" : [
     "console",
