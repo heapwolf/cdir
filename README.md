@@ -37,5 +37,5 @@ console.dir(stuff);
 
 The output looks something like this.
 
-<img src="https://github.com/nodetraining/node-dir/raw/master/screenshot.png"/>
+<img src="https://github.com/hij1nx/node-dir/raw/master/screenshot.png"/>
 
