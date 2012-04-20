@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+console.dir = require('../dir');
+
+var filename = process.argv[2];
+
+if (!filename) {
+  throw new Error('Requires a filename');
+}
+
+console.dir(JSON.parse(fs.readFileSync(filename)));

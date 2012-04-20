@@ -7,15 +7,7 @@ var stdin = process.openStdin();
 tty.setRawMode(true);    
 
 var tabSize = 2;
-var filename;
 var displayed = 0;
-
-if (process.argv[0] === 'node') {
-  filename = process.argv[2];
-}
-else {
-  filename = process.argv[1];
-}
 
 var meta = [], map = [0];
 
@@ -31,9 +23,11 @@ var write = function write(s) {
 //
 var up = function up(i) {
 
+var maxLineLen = process.stdout.getWindowSize()[0]/2;
+
   if (i > 0) {
     while(i--) {
-      write(ws(80, true) + '\033[1A\r');
+      write(ws(maxLineLen, true) + '\033[1A\r');
     }
   }
   else {
@@ -96,6 +90,17 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
 
   switch(type) {
     case 'string':
+
+      meta.push({
+        description: itemPrefix + '\033[31m"' + node + '"\033[0m',
+        expanded: false,
+        displayed: first,
+        type: type,
+        depth: depth,
+        index: seed
+      });
+
+    break;
     case 'number':
     case 'boolean':
     case 'undefined':
@@ -103,7 +108,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
     case 'null':
 
       meta.push({
-        description: itemPrefix + node,
+        description: itemPrefix + '\033[31m' + node + '\033[0m',
         expanded: false,
         displayed: first,
         type: type,
@@ -127,7 +132,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
     case 'array':
 
       meta.push({
-        description: itemPrefix + 'Array[' + node.length + ']',
+        description: itemPrefix + '\033[36mArray[\033[0m' + node.length + '\033[36m]\033[0m',
         expanded: false,
         displayed: first,
         type: type,
@@ -149,7 +154,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
     case 'object':
 
       meta.push({ 
-        description: itemPrefix + 'Object',
+        description: itemPrefix + '\033[36mObject\033[0m',
         expanded: false,
         displayed: first,
         type: type,
@@ -184,13 +189,13 @@ var renderMeta = function renderMeta() {
 
       if (displayed === selection) {
         write('\033[30;47m');
+        write(meta[i].description.replace(/\033\[[0-9;]*m/g, '') + '\n');
+        write('\033[0m');
+      }
+      else {
+        write(meta[i].description + '\n');
       }
 
-      write(meta[i].description + '\n');
-
-      if (displayed === selection) {
-        write('\033[0m');
-      } 
     }
   }
 };
