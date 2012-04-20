@@ -9,7 +9,7 @@
     "interacive",
     "prompt"
   ],
-  "version" : "0.0.3",
+  "version" : "0.0.4",
   "author" : "Paolo Fragomeni <paolo@nodejisu.com>",
   "repository" : { 
     "type" : "git",
