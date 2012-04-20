@@ -232,17 +232,14 @@ var listener = function listener(chunk, key) {
     //
     // if this is a toggle, the value must be of type array or object.
     //
-    if ((key.name === 'space' || key.name === 'enter') &&
+    if ((key.name === 'space' || key.name === 'enter' || 
+          key.name === 'right' || key.name === 'left') &&
         (meta[index].type === 'array' || meta[index].type === 'object')) {
 
       var start = selection;
       var stop = meta.length;
       var next = meta[index].depth+1;
       var started = false;
-
-      if (meta[index].type === 'string') {
-        return;
-      }
 
       if (meta[index].expanded) {
 
