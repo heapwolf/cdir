@@ -91,6 +91,10 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
   switch(type) {
     case 'string':
 
+      if (node.length > process.stdout.getWindowSize()[0]/2) {
+        node = node.substr(0, process.stdout.getWindowSize()[0]/2) + '...';
+      }
+
       meta.push({
         description: itemPrefix + '\033[31m"' + node + '"\033[0m',
         expanded: false,
@@ -132,7 +136,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
     case 'array':
 
       meta.push({
-        description: itemPrefix + '\033[36mArray[\033[0m' + node.length + '\033[36m]\033[0m',
+        description: itemPrefix + '▸ \033[36mArray[\033[0m' + node.length + '\033[36m]\033[0m',
         expanded: false,
         displayed: first,
         type: type,
@@ -154,7 +158,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
     case 'object':
 
       meta.push({ 
-        description: itemPrefix + '\033[36mObject\033[0m',
+        description: itemPrefix + '▸ \033[36mObject\033[0m',
         expanded: false,
         displayed: first,
         type: type,
@@ -243,6 +247,7 @@ var listener = function listener(chunk, key) {
 
       if (meta[index].expanded) {
 
+        meta[index].description = meta[index].description.replace('▾', '▸');
         meta[index].expanded = false;
 
         for (var i = index, l = stop; i < l; i++) {
@@ -260,6 +265,7 @@ var listener = function listener(chunk, key) {
       }
       else {
 
+        meta[index].description = meta[index].description.replace('▸', '▾');
         meta[index].expanded = true;
 
         for (var i = index, l = stop; i < l; i++) {
