@@ -7,6 +7,8 @@ Why? Sometimes you have a lot of data that gets dumped to the screen. It's hard 
 # Usage
 First, require the module. Then use `console.dir(somecode)` in your program and then use `tab` or `shift+tab` to cycle through the object's members. You can hit `space`, `return` or `enter` to expand a member. See the example below.
 
+Hit `ctrl+c` or `q` to quit!
+
 There is a CLI version too if you want to use it. `npm install dir -g`.
 
 ```js

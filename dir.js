@@ -291,7 +291,6 @@ var listener = function listener(chunk, key) {
     }
 
     if (key.name === 'q' || (key.ctrl && key.name == 'c')) {
-      //write('\r\n');
       stdin.removeListener('keypress', listener);
       stdin.pause();
     }
