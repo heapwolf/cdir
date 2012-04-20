@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
-console.dir = require('../cdir');
+console.dir = require('../dir');
 
 var filename = process.argv[2];
 

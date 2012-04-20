@@ -4,7 +4,7 @@ var fs = require('fs');
 var jv = exports, stack = [];
 
 var stdin = process.openStdin(); 
-tty.setRawMode(true);    
+tty.setRawMode(true);
 
 var tabSize = 2;
 var displayed = 0;

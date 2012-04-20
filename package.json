@@ -9,7 +9,7 @@
     "interacive",
     "prompt"
   ],
-  "version" : "0.0.2",
+  "version" : "0.0.3",
   "author" : "Paolo Fragomeni <paolo@nodejisu.com>",
   "repository" : { 
     "type" : "git",
@@ -17,6 +17,9 @@
   },
   "bugs" : { 
     "url" : "http://github.com/hij1nx/cdir/issues" 
+  },
+  "bin": {
+    "cdir": "./bin/cdir"
   },
   "engines" : ["node >= 0.6.x"],
   "main" : "./cdir",
