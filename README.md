@@ -9,7 +9,7 @@ First, require the module. Then use `console.dir(somecode)` in your program and 
 
 Hit `ctrl+c` or `q` to quit!
 
-There is a CLI version too if you want to use it. `npm install dir -g`.
+There is a CLI version too if you want to use it. `npm install cdir -g`.
 
 ```js
 
