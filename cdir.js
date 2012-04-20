@@ -80,7 +80,7 @@ var getType = function getType(o) {
 //
 var indent = 0;
 var seed = -1;
-var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) {
+var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, dontPreface) {
 
   itemPrefix = itemPrefix || '';
 
@@ -88,21 +88,76 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
   var type = getType(node);
   seed++;
 
-  switch(type) {
-    case 'string':
+  function addStrData(node) {
+    indent++;
+    depth++;
 
-      if (node.length > process.stdout.getWindowSize()[0]/2) {
-        node = node.substr(0, process.stdout.getWindowSize()[0]/2) + '...';
+    var buffer = '';
+    var description = ws(indent, true);
+    var maxWidth = process.stdout.getWindowSize()[0] - indent - 6;
+
+    for (var i = 0, cpos = 0, l = node.length; i < l; i++, cpos++) {
+
+      buffer += node[i];
+
+      if (cpos >= maxWidth) {
+
+        cpos = 0;
+
+        meta.push({
+          description: description + '\033[31m"' + buffer + '"\033[0m',
+          expanded: false,
+          displayed: first,
+          type: type,
+          depth: depth,
+          index: seed++
+        });
+
+        buffer = '';
       }
 
+    }
+
+    if (buffer.length > 0) {
+
       meta.push({
-        description: itemPrefix + '\033[31m"' + node + '"\033[0m',
+        description: description + '\033[31m"' + buffer + '"\033[0m',
         expanded: false,
         displayed: first,
         type: type,
         depth: depth,
-        index: seed
+        index: seed++
       });
+
+    }
+
+    indent--;
+  }
+
+  switch(type) {
+    case 'string':
+
+      var extLen = (indent + itemPrefix.length) - 2;
+      var truncatedNode = '0';
+
+        if (node.length > process.stdout.getWindowSize()[0] - extLen) {
+          truncatedNode = '▸ ' + '\033[31m"' + node.substr(0, process.stdout.getWindowSize()[0]/2) + '..."\033[0m';
+        }
+        else {
+          truncatedNode = '\033[31m"' + node + '"\033[0m';
+        }
+
+        meta.push({
+          description: itemPrefix + truncatedNode,
+          expanded: false,
+          displayed: first,
+          type: type,
+          depth: depth,
+          index: seed
+        });
+
+        addStrData(node);
+
 
     break;
     case 'number':
@@ -124,13 +179,16 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix) 
     case 'function':
 
       meta.push({
-        description: itemPrefix + '[Function]',
+        description: itemPrefix + '▸ \033[36m[Function]\033[0m',
         expanded: false,
         displayed: first,
         type: type,
         depth: depth,
         index: seed
       });
+
+      addStrData(node.toString());
+
 
     break;
     case 'array':
@@ -238,12 +296,19 @@ var listener = function listener(chunk, key) {
     //
     if ((key.name === 'space' || key.name === 'enter' || 
           key.name === 'right' || key.name === 'left') &&
-        (meta[index].type === 'array' || meta[index].type === 'object')) {
+        (meta[index].type === 'array' || meta[index].type === 'object' ||
+          meta[index].type === 'function' || meta[index].type === 'string')) {
 
       var start = selection;
       var stop = meta.length;
       var next = meta[index].depth+1;
       var started = false;
+
+      if (meta[index].type === 'string' && 
+        (meta[index].description.indexOf('▸') === -1 && 
+        meta[index].description.indexOf('▾') === -1)) {
+        return;
+      }
 
       if (meta[index].expanded) {
 
