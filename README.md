@@ -1,4 +1,3 @@
-
 # Synopsis
 An interactive representation of an object for the CLI similar to that of console.dir() in webkit.
 
@@ -36,4 +35,5 @@ console.dir(stuff);
 
 The output looks something like this.
 
-<img/>
+<img src="https://github.com/nodetraining/node-dir/raw/master/screenshot.png"/>
+
