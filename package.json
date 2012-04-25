@@ -8,7 +8,7 @@
     "json",
     "prompt"
   ],
-  "version" : "0.0.7",
+  "version" : "0.0.8",
   "author" : "Paolo Fragomeni <paolo@nodejisu.com>",
   "repository" : {
     "type" : "git",
