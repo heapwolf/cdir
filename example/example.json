@@ -69,7 +69,7 @@
       "url" : "http://github.com/hij1nx/node-dir/issues" 
     },
     "ensgines" : ["node >= 0.6.x"],
-    "masin" : "./dir",
+    "f2" : "./dir",
     "sscripts": { 
       "test": "node tests/test.js"
     }

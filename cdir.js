@@ -14,6 +14,8 @@ var copybuffer = 0;
 var searchmode = false;
 var searchbuffer = '';
 var lastsearch = '';
+var repeat = false;
+var lastIndex = 0;
 
 var meta = [], map = [0];
 
@@ -326,6 +328,7 @@ var toggle = function toggle (index) {
   var stop = meta.length;
   var next = meta[index].depth+1;
   var started = false;
+  var toggledCount = 0;
 
   if (meta[index].type === 'string' && 
     (meta[index].description.indexOf('▸') === -1 && 
@@ -350,6 +353,7 @@ var toggle = function toggle (index) {
         meta[i].description = meta[i].description.replace('▾', '▸');
         meta[i].expanded = false;
         started = true;
+        toggledCount++;
       }
       else if (started && meta[i].depth < next) {
         break;
@@ -368,6 +372,7 @@ var toggle = function toggle (index) {
         meta[i].displayed = true;
         meta[i].expanded = false;
         started = true;
+        toggledCount++;
       }
       else if (started && meta[i].depth < next) {
         break;
@@ -385,6 +390,7 @@ var toggle = function toggle (index) {
 
   up(displayed);
   renderMeta();
+  return toggledCount;
 }
 
 var listener = function listener (chunk, key) {
@@ -424,18 +430,20 @@ var listener = function listener (chunk, key) {
     searchmode = false;
 
     //
+    // preserve the old selection in case nothing is found.
+    //
+    var oldSelection = selection;
+    selection = 0;
+
+    //
     // if the user enters nothing, assume we want to repeat the last search.
     //
     if (searchbuffer === '') {
-
       searchbuffer = lastsearch;
+      repeat = true;
     }
     else {
-
-      //
-      // start from the top if this is a unique search.
-      //
-      selection = 0;
+      repeat = false;
     }
 
     //
@@ -460,51 +468,58 @@ var listener = function listener (chunk, key) {
       return;
     }
 
-    for (var i = selection, l = meta.length; i < l; i++) {
+    var l = meta.length;
+    var startIndex = meta[selection].index;
 
+    if (repeat) {
+      startIndex = lastIndex + 1;
+    }
+
+    for (var i = startIndex; i < l; i++) {
+
+      //
+      // if there is a match
+      //
       if (regexp.test(meta[i].description)) {
 
-        //
-        // we have a match now we need to unfold the appropriate nodes.
-        //
         var currentDepth = meta[i].depth;
-        var currentSelection = meta[i].index;
-        var newSelection = 0;
+        var matchedIndex = meta[i].index;
 
         found = true;
+        lastIndex = meta[i].index;
 
         for (var j = i; j >= 0; j--) {
 
           if (meta[j].depth < currentDepth) {
 
-            currentDepth--;
             if (meta[j].expanded === false) {
+              currentDepth--;
               toggle(j);
             }
           }
         }
 
-        for (var i = 0, l = meta.length; i < l; i++) {
-
-          if (meta[i].displayed === true) {
-            newSelection++;
+        for (var k = 0; k < l; k++) {
+          if (meta[k].displayed === true) {
+            selection++;
           }
-          if (meta[i].index === currentSelection) {
+          if (meta[k].index === matchedIndex) {
             break;
           }
         }
 
         up(displayed);
-        selection = newSelection;
         renderMeta();
         break;
 
       }
+
     }
 
     if (!found) {
 
       write('Not found\r');
+      selection = oldSelection;
     }
 
     //
