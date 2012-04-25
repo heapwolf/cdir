@@ -9,7 +9,7 @@
     "interacive",
     "prompt"
   ],
-  "version" : function(a) { if ('x' && 1) { return 'A short string'; } else if (a) { console.log('foobar'); return 2000; } return 10; },
+  "version" : 1000,
   "author" : "Paolo Fragomeni <paolo@nodejitsu.com>",
   "repository" : { 
     "type" : "git",

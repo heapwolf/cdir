@@ -1,5 +1,6 @@
 
 var tty = require('tty');
+var rl = require('readline');
 var fs = require('fs');
 var jv = exports, stack = [];
 
@@ -8,37 +9,85 @@ tty.setRawMode(true);
 
 var tabSize = 2;
 var displayed = 0;
+var copybuffer = 0;
+
+var searchmode = false;
+var searchbuffer = '';
+var lastsearch = '';
 
 var meta = [], map = [0];
 
 var selection = 1;
 var index = 0;
 
-var write = function write(s) {
+var write = function write (s) {
   process.stdout.write(s);
 }
 
 //
+// used for cut/copy/paste
+//
+Object.defineProperties(Object, {
+  'extend': {
+    'configurable': true,
+    'enumerable': false,
+    'value': function extend(a, b) {
+
+      var extObj, witKeys = Object.keys(b);
+      extObj = Object.keys(a).length ? Object.clone(a) : {};
+
+      witKeys.forEach(function (key) {
+        Object.defineProperty(
+          extObj, 
+          key, 
+          Object.getOwnPropertyDescriptor(b, key)
+        );
+      });
+
+      return extObj;
+    },
+    'writable': true
+  },
+  'clone': {
+    'configurable': true,
+    'enumerable': false,
+    'value': function clone(obj) {
+
+      return Object.extend({}, obj);
+    },
+    'writable': true
+  }
+});
+
+//
 // move the cursor upward on the screen
 //
-var up = function up(i) {
+var up = function up (i, save) {
 
-var maxLineLen = process.stdout.getWindowSize()[0]/2;
+  i = i || 1;
 
   if (i > 0) {
     while(i--) {
-      write(ws(maxLineLen, true) + '\033[1A\r');
+      write(!save ? '\033[K\033[1A\r' : '\033[1A\r');
     }
   }
-  else {
-    write('\033[1A\r');
+};
+
+var right = function right (i) {
+
+  i = i || 1;
+
+  if (i > 0) {
+    while(i--) {
+      write('\033[1C\r');
+    }
   }
 };
 
 //
 // generate whitespace
 //
-var ws = function ws(i, multiplier) {
+var ws = function ws (i, multiplier) {
   
   var s = '';
   
@@ -52,7 +101,7 @@ var ws = function ws(i, multiplier) {
   return s;
 };
 
-var getType = function getType(o) {
+var getType = function getType (o) {
 
   if (typeof o === 'string' || typeof o === 'number' || 
     typeof o === 'boolean' || typeof o === 'function') {
@@ -80,7 +129,8 @@ var getType = function getType(o) {
 //
 var indent = 0;
 var seed = -1;
-var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, dontPreface) {
+
+var constructMeta = function constructMeta (parentType, depth, node, itemPrefix, dontPreface) {
 
   itemPrefix = itemPrefix || '';
 
@@ -139,9 +189,11 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, 
 
       var extLen = (indent + itemPrefix.length) - 2;
       var truncatedNode = '0';
+      var truncated = false;
 
         if (node.length > process.stdout.getWindowSize()[0] - extLen) {
           truncatedNode = '▸ ' + '\033[31m"' + node.substr(0, process.stdout.getWindowSize()[0]/2) + '..."\033[0m';
+          truncated = true;
         }
         else {
           truncatedNode = '\033[31m"' + node + '"\033[0m';
@@ -153,11 +205,13 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, 
           displayed: first,
           type: type,
           depth: depth,
+          node: node,
           index: seed
         });
 
-        addStrData(node);
-
+        if (truncated === true) {
+          addStrData(node);
+        }
 
     break;
     case 'number':
@@ -172,6 +226,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, 
         displayed: first,
         type: type,
         depth: depth,
+        node: node,
         index: seed
       });
 
@@ -184,6 +239,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, 
         displayed: first,
         type: type,
         depth: depth,
+        node: node,
         index: seed
       });
 
@@ -199,6 +255,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, 
         displayed: first,
         type: type,
         depth: depth,
+        node: node,
         index: seed
       });
 
@@ -221,6 +278,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, 
         displayed: first,
         type: type,
         depth: depth,
+        node: node,
         index: seed
       });
 
@@ -239,7 +297,7 @@ var constructMeta = function constructMeta(parentType, depth, node, itemPrefix, 
 
 };
 
-var renderMeta = function renderMeta() {
+var renderMeta = function renderMeta () {
 
   displayed = 0;
 
@@ -262,9 +320,219 @@ var renderMeta = function renderMeta() {
   }
 };
 
-var listener = function listener(chunk, key) {
+var toggle = function toggle (index) {
 
-  if (key) {
+  var start = selection;
+  var stop = meta.length;
+  var next = meta[index].depth+1;
+  var started = false;
+
+  if (meta[index].type === 'string' && 
+    (meta[index].description.indexOf('▸') === -1 && 
+    meta[index].description.indexOf('▾') === -1)) {
+    return;
+  }
+
+  if (meta[index].expanded) {
+
+    meta[index].description = meta[index].description.replace('▾', '▸');
+    meta[index].expanded = false;
+
+    for (var i = index, l = stop; i < l; i++) {
+
+      if (meta[i].depth >= next) {
+        meta[i].displayed = false;
+
+        //
+        // if anything that was opened below this node shows that it was
+        // expanded, change its icon so that it appears collapsed.
+        //
+        meta[i].description = meta[i].description.replace('▾', '▸');
+        meta[i].expanded = false;
+        started = true;
+      }
+      else if (started && meta[i].depth < next) {
+        break;
+      }
+    }
+
+  }
+  else {
+
+    meta[index].description = meta[index].description.replace('▸', '▾');
+    meta[index].expanded = true;
+
+    for (var i = index, l = stop; i < l; i++) {
+
+      if (meta[i].depth === next) {
+        meta[i].displayed = true;
+        meta[i].expanded = false;
+        started = true;
+      }
+      else if (started && meta[i].depth < next) {
+        break;
+      }
+    }
+
+  }
+
+  map = [];
+  for (var i = 0, l = meta.length; i < l; i++) {      
+    if (meta[i].displayed === true) {
+      map.push(meta[i].index);
+    }
+  }
+
+  up(displayed);
+  renderMeta();
+}
+
+var listener = function listener (chunk, key) {
+
+  //
+  // search mode stuff
+  //
+  if (chunk === '/') {
+
+    searchmode = true;
+    searchbuffer = '';
+
+    //
+    // show the user a prompt, if they did a search, 
+    // include that before the prompt as the default.
+    //
+    if (lastsearch !== '') {
+      process.stdout.write('(' + lastsearch + ') /');
+    }
+    else {
+      process.stdout.write('/');
+    }
+  }
+  else if (searchmode === true && typeof key !== 'undefined' && key.name === 'backspace') {
+    
+    //
+    // dont delete more characters than the user has entered.
+    //
+    if (searchbuffer.length > 0) {
+
+      searchbuffer = searchbuffer.slice(0, -1);
+      write('\033[1D \033[1D');      
+    }
+  }
+  else if (searchmode === true && typeof key !== 'undefined' && key.name === 'enter') {
+
+    searchmode = false;
+
+    //
+    // if the user enters nothing, assume we want to repeat the last search.
+    //
+    if (searchbuffer === '') {
+
+      searchbuffer = lastsearch;
+    }
+    else {
+
+      //
+      // start from the top if this is a unique search.
+      //
+      selection = 0;
+    }
+
+    //
+    // clear the line
+    //
+    write('\r\033[K');
+
+    var regexp;
+    var found = false;
+
+    //
+    // create a regular expression from the input.
+    // if its a bad regexp, let the user know nicely.
+    //
+    try {
+
+      regexp = new RegExp(searchbuffer);
+    }
+    catch(e) {
+
+      write(e.message + '\r');
+      return;
+    }
+
+    for (var i = selection, l = meta.length; i < l; i++) {
+
+      if (regexp.test(meta[i].description)) {
+
+        //
+        // we have a match now we need to unfold the appropriate nodes.
+        //
+        var currentDepth = meta[i].depth;
+        var currentSelection = meta[i].index;
+        var newSelection = 0;
+
+        found = true;
+
+        for (var j = i; j >= 0; j--) {
+
+          if (meta[j].depth < currentDepth) {
+
+            currentDepth--;
+            if (meta[j].expanded === false) {
+              toggle(j);
+            }
+          }
+        }
+
+        for (var i = 0, l = meta.length; i < l; i++) {
+
+          if (meta[i].displayed === true) {
+            newSelection++;
+          }
+          if (meta[i].index === currentSelection) {
+            break;
+          }
+        }
+
+        up(displayed);
+        selection = newSelection;
+        renderMeta();
+        break;
+
+      }
+    }
+
+    if (!found) {
+
+      write('Not found\r');
+    }
+
+    //
+    // save the last search even if its unsuccessful.
+    //
+    lastsearch = searchbuffer;
+
+    //
+    // reset the search buffer
+    //
+    searchbuffer = '';
+
+    //
+    // discontinue listening to keypresses until we're
+    // done searching.
+    //
+    return true;
+  }
+  else if (searchmode === true) {
+    
+    write(chunk);
+    searchbuffer += chunk;
+  }
+
+  //
+  // exploration mode stuff
+  //
+  if (key && searchmode === false) {
 
     var downAction = (key.name === 'tab' && !key.shift) || key.name === 'down';
     var upAction = (key.shift && key.name === 'tab') || key.name === 'up';
@@ -299,66 +567,11 @@ var listener = function listener(chunk, key) {
         (meta[index].type === 'array' || meta[index].type === 'object' ||
           meta[index].type === 'function' || meta[index].type === 'string')) {
 
-      var start = selection;
-      var stop = meta.length;
-      var next = meta[index].depth+1;
-      var started = false;
-
-      if (meta[index].type === 'string' && 
-        (meta[index].description.indexOf('▸') === -1 && 
-        meta[index].description.indexOf('▾') === -1)) {
-        return;
-      }
-
-      if (meta[index].expanded) {
-
-        meta[index].description = meta[index].description.replace('▾', '▸');
-        meta[index].expanded = false;
-
-        for (var i = index, l = stop; i < l; i++) {
-
-          if (meta[i].depth >= next) {
-            meta[i].displayed = false;
-            meta[i].expanded = false;
-            started = true;
-          }
-          else if (started && meta[i].depth < next) {
-            break;
-          }
-        }
-
-      }
-      else {
-
-        meta[index].description = meta[index].description.replace('▸', '▾');
-        meta[index].expanded = true;
-
-        for (var i = index, l = stop; i < l; i++) {
-
-          if (meta[i].depth === next) {
-            meta[i].displayed = true;
-            meta[i].expanded = false;
-            started = true;
-          }
-          else if (started && meta[i].depth < next) {
-            break;
-          }
-        }
-
-      }
-
-      map = [];
-      for (var i = 0, l = meta.length; i < l; i++) {      
-        if (meta[i].displayed === true) {
-          map.push(meta[i].index);
-        }
-      }
-
-      up(displayed);
-      renderMeta();
+      index = map[selection-1];
+      toggle(index);
     }
 
-    if (key.name === 'q' || (key.ctrl && key.name == 'c')) {
+    if (key.name === 'q' || key.ctrl && key.name === 'q') {
       stdin.removeListener('keypress', listener);
       stdin.pause();
     }
@@ -366,7 +579,7 @@ var listener = function listener(chunk, key) {
   }
 };
 
-var dir = function dir(obj, options) {
+var dir = function dir (obj, options) {
 
   constructMeta(getType(obj), 0, obj);
   renderMeta();
