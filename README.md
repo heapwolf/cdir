@@ -5,10 +5,17 @@ An interactive representation of an object for the CLI similar to that of consol
 Why? Sometimes you have a lot of data that gets dumped to the screen. It's hard to keep track of it visually. A lot of the time you are just looking for one item in a sea of data. Progressive disclosure helps.
 
 # Usage
+
+## Navigation
 First, require the module. Then use `console.dir(somecode)` in your program and then use `tab` or `shift+tab` to cycle through the object's members. You can hit `space`, `return` or `enter` to expand a member. See the example below.
 
+## Searching throught JSON
+Search by pressing the `/` key. This will display a `/` prompt. If you have already searched for something it will be displayed before the `/` prompt. For instance if you searched for "foobar" it would appear as `(foobar) /`.
+
+## How to quit
 Hit `ctrl+c` or `q` to quit!
 
+## An example
 There is a CLI version too if you want to use it. `npm install cdir -g`.
 
 ```js
