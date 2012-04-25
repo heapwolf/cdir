@@ -503,7 +503,7 @@ var listener = function listener (chunk, key) {
     //
     return true;
   }
-  else if (searchmode === true) {
+  else if (searchmode === true && typeof(chunk) !== 'undefined') {
     
     write(chunk);
     searchbuffer += chunk;
