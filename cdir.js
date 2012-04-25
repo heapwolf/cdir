@@ -27,41 +27,6 @@ var write = function write (s) {
 }
 
 //
-// used for cut/copy/paste
-//
-Object.defineProperties(Object, {
-  'extend': {
-    'configurable': true,
-    'enumerable': false,
-    'value': function extend(a, b) {
-
-      var extObj, witKeys = Object.keys(b);
-      extObj = Object.keys(a).length ? Object.clone(a) : {};
-
-      witKeys.forEach(function (key) {
-        Object.defineProperty(
-          extObj, 
-          key, 
-          Object.getOwnPropertyDescriptor(b, key)
-        );
-      });
-
-      return extObj;
-    },
-    'writable': true
-  },
-  'clone': {
-    'configurable': true,
-    'enumerable': false,
-    'value': function clone(obj) {
-
-      return Object.extend({}, obj);
-    },
-    'writable': true
-  }
-});
-
-//
 // move the cursor upward on the screen
 //
 var up = function up (i, save) {
@@ -560,6 +525,7 @@ var listener = function listener (chunk, key) {
       index = map[selection];
 
       selection++;
+      lastIndex = 0;
 
       up(displayed);
       renderMeta();
@@ -568,6 +534,7 @@ var listener = function listener (chunk, key) {
     if (upAction && selection > 1) {
 
       selection--;
+      lastIndex = 0;
       index = map[selection-1];
 
       up(displayed);
@@ -594,9 +561,64 @@ var listener = function listener (chunk, key) {
   }
 };
 
+if (typeof JSON.decycle !== 'function') {
+  JSON.decycle = function decycle(object) {
+
+    var objects = [],   // Keep a reference to each unique object or array
+        paths = [];     // Keep the path to each unique object or array
+
+    return (function derez(value, path) {
+
+      var i,          // The loop counter
+          name,       // Property name
+          nu;         // The new object or array
+
+      switch (typeof value) {
+        case 'object':
+
+          if (!value) {
+            return null;
+          }
+
+          for (i = 0; i < objects.length; i += 1) {
+            if (objects[i] === value) {
+              return '[Circular]';
+            }
+          }
+
+          objects.push(value);
+          paths.push(path);
+
+          if (Object.prototype.toString.apply(value) === '[object Array]') {
+            nu = [];
+            for (i = 0; i < value.length; i += 1) {
+              nu[i] = derez(value[i], path + '[' + i + ']');
+            }
+          } else {
+
+            nu = {};
+            for (name in value) {
+              if (Object.prototype.hasOwnProperty.call(value, name)) {
+                nu[name] = derez(value[name],
+                  path + '[' + JSON.stringify(name) + ']');
+              }
+            }
+          }
+          return nu;
+        case 'number':
+        case 'string':
+        case 'boolean':
+          return value;
+        }
+    }(object, '[Curcular]'));
+  };
+}
+
 var dir = function dir (obj, options) {
 
-  constructMeta(getType(obj), 0, obj);
+  var dobj = JSON.decycle(obj);
+
+  constructMeta(getType(dobj), 0, dobj);
   renderMeta();
 
   stdin.on('keypress', listener);

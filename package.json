@@ -10,7 +10,7 @@
   ],
   "version" : "0.0.7",
   "author" : "Paolo Fragomeni <paolo@nodejisu.com>",
-  "repository" : { 
+  "repository" : {
     "type" : "git",
     "url" : "http://github.com/hij1nx/cdir.git"
   },

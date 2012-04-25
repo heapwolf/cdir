@@ -1,4 +1,7 @@
-{ 
+
+console.dir = require('../cdir');
+
+var big = { 
   "name" : "dir", 
   "description" : "An interactive console.dir() for the terminal.",
   "tags" : [
@@ -74,4 +77,6 @@
       "test": "node tests/test.js"
     }
   }
-}
+};
+
+console.dir(big);
