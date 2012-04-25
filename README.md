@@ -12,7 +12,7 @@ Reading big object dumps is a waste of time. Progressive disclosure helps.
 # Usage
 
 ## Install
-Do `npm insatll cdir -g` and then require the module in your program like this `console.dir = require('cdir')`.
+Do `npm install cdir -g` and then require the module in your program like this `console.dir = require('cdir')`.
 
 ## Navigate
 Use `console.dir(someobject)` somewhere in your program and then hit `tab`, `shift+tab` or the arrow keys to cycle through the object's members. You can hit `space`, `return` or `enter` to expand a member.
