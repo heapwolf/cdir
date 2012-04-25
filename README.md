@@ -7,7 +7,7 @@ Reading big object dumps is a waste of time. Progressive disclosure helps.
 # Features
  - Searchable/Repeat search
  - Handles cyclical references
- - Expand and collapse nodes like webkit console.dir()
+ - Expand and collapse nodes
 
 # Usage
 
