@@ -553,7 +553,7 @@ var listener = function listener (chunk, key) {
       toggle(index);
     }
 
-    if (key.name === 'q' || key.ctrl && key.name === 'q') {
+    if (key.name === 'q' || key.ctrl && key.name === 'c') {
       stdin.removeListener('keypress', listener);
       stdin.pause();
     }
