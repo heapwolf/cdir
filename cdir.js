@@ -363,7 +363,7 @@ var listener = function listener (chunk, key) {
   //
   // search mode stuff
   //
-  if (chunk === '/') {
+  if (chunk === '/' && searchmode === false) {
 
     searchmode = true;
     searchbuffer = '';
