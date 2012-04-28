@@ -16,6 +16,7 @@ var searchbuffer = '';
 var lastsearch = '';
 var repeat = false;
 var lastIndex = 0;
+var linemode = false;
 
 var meta = [], map = [0];
 
@@ -278,6 +279,9 @@ var renderMeta = function renderMeta () {
         write('\033[30;47m');
         write(meta[i].description.replace(/\033\[[0-9;]*m/g, '') + '\n');
         write('\033[0m');
+      }
+      else if (linemode === true) {
+	write(meta[i].index + ': ' + meta[i].description + '\n');
       }
       else {
         write(meta[i].description + '\n');
@@ -559,6 +563,16 @@ var listener = function listener (chunk, key) {
     }
 
   }
+
+  //
+  // Toggle for linemode
+  //
+  if (chunk === ':' && searchmode === false) {
+    linemode ? linemode = false : linemode = true;
+    up(displayed);
+    renderMeta();
+  }
+
 };
 
 if (typeof JSON.decycle !== 'function') {
