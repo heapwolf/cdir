@@ -20,6 +20,9 @@ Use `console.dir(someobject)` somewhere in your program and then hit `tab`, `shi
 ## Search
 Search by pressing the `/` key. This will display a `/` prompt. If you have already searched for something it will be displayed before the `/` prompt. For instance if you searched for "foobar" it would appear as `(foobar) /`.
 
+## Line Numbers
+You can add comprehensive line numbers by pressing `:` while not in search mode. These line numbers include collapsed nodes so expanding one will not change numbers of later items.
+
 ## Quit
 Hit `ctrl+c` or `q` to quit!
 
