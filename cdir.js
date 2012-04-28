@@ -277,11 +277,16 @@ var renderMeta = function renderMeta () {
 
       if (displayed === selection) {
         write('\033[30;47m');
-        write(meta[i].description.replace(/\033\[[0-9;]*m/g, '') + '\n');
+        if (linemode === true) {
+          write(meta[i].index + ': ' + meta[i].description.replace(/\033\[[0-9;]*m/g, '') + '\n');
+        }
+        else {
+          write(meta[i].description.replace(/\033\[[0-9;]*m/g, '') + '\n'); 
+        }
         write('\033[0m');
       }
       else if (linemode === true) {
-	write(meta[i].index + ': ' + meta[i].description + '\n');
+	      write(meta[i].index + ': ' + meta[i].description + '\n');
       }
       else {
         write(meta[i].description + '\n');
