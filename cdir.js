@@ -126,19 +126,13 @@ if (typeof JSON.decycle !== 'function') {
 
             nu = {};
             for (name in value) {
-              if (Object.prototype.hasOwnProperty.call(value, name)) {
-                nu[name] = derez(value[name],
-                  path + '[' + JSON.stringify(name) + ']');
-              }
+              nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
             }
           }
           return nu;
-        case 'number':
-        case 'string':
-        case 'boolean':
-        case 'undefined':
-        case 'function':
+        default:
           return value;
+        break;
         }
 
     }(object, '[Curcular]'));
@@ -285,7 +279,25 @@ module.exports = function dir (obj, options) {
           index: seed
         });
 
-        addStrData(node.toString());
+        if (Object.keys(node.prototype).length > 0) {
+
+          indent++;
+          depth++;
+
+          constructMeta(type, depth, node.toString(), ws(indent, true));
+
+          for (var key in node.prototype) {
+            var description = ws(indent, true) + key + ': ';
+            constructMeta(type, depth, node.prototype[key], description);
+          }
+
+          indent--;
+
+        }
+        else {
+          addStrData(node.toString());
+        }
+
       break;
       case 'array':
 
@@ -331,6 +343,7 @@ module.exports = function dir (obj, options) {
 
         indent--;
       break;
+
     }
   };
 
@@ -584,8 +597,6 @@ module.exports = function dir (obj, options) {
     //
     if (key && searchmode === false) {
 
-
-
       var downAction = (key.name === 'tab' && !key.shift) || key.name === 'down';
       var upAction = (key.shift && key.name === 'tab') || key.name === 'up';
 
@@ -614,12 +625,13 @@ module.exports = function dir (obj, options) {
       }
 
       //
-      // if this is a toggle, the value must be of type array or object.
+      // if this is a toggle.
       //
       if ((key.name === 'space' || key.name === 'enter' || 
             key.name === 'right' || key.name === 'left') &&
           (meta[index].type === 'array' || meta[index].type === 'object' ||
-            meta[index].type === 'function' || meta[index].type === 'string')) {
+            meta[index].type === 'function' || meta[index].type === 'string')
+              && selection <= displayed) {
 
         index = map[selection-1];
         toggle(index);
@@ -640,6 +652,7 @@ module.exports = function dir (obj, options) {
         }
 
         stdin.removeListener('keypress', listener);
+        tty.setRawMode(false);
       }
 
     }
