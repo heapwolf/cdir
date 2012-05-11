@@ -650,7 +650,6 @@ module.exports = function dir (obj, options) {
         else {
           stdin.pause();
         }
-
         stdin.removeListener('keypress', listener);
         tty.setRawMode(false);
       }
