@@ -1,19 +1,7 @@
 var tty = require('tty');
 var rl = require('readline');
-var fs = require('fs');
 
-//
-// capture any existing events that we will use on stdin
-//
-var oldKeypressEvent, oldDataEvent, stdin;
-
-if (process.stdin._events.keypress[0]) {
-  oldKeypressEvent = process.stdin._events.keypress[0];
-}
-
-if (process.stdin._events.data && process.stdin._events.data[0]) {
-  oldDataEvent = process.stdin._events.data[0];
-}
+var stdin;
 
 //
 // shorthand write to stdout
@@ -430,7 +418,7 @@ module.exports = function dir (obj, options) {
     }
 
     map = [];
-    for (var i = 0, l = meta.length; i < l; i++) {      
+    for (var i = 0, l = meta.length; i < l; i++) {
       if (meta[i].displayed === true) {
         map.push(meta[i].index);
       }
@@ -470,7 +458,7 @@ module.exports = function dir (obj, options) {
       if (searchbuffer.length > 0) {
 
         searchbuffer = searchbuffer.slice(0, -1);
-        write('\033[1D \033[1D');      
+        write('\033[1D \033[1D');
       }
     }
     else if (searchmode === true && typeof key !== 'undefined' && key.name === 'enter') {
@@ -587,7 +575,7 @@ module.exports = function dir (obj, options) {
       return true;
     }
     else if (searchmode === true && typeof(chunk) !== 'undefined') {
-      
+
       write(chunk);
       searchbuffer += chunk;
     }
@@ -639,46 +627,61 @@ module.exports = function dir (obj, options) {
 
       if (key.name === 'q' || (key.ctrl && key.name === 'c')) {
 
-        if (oldDataEvent) {
-          stdin.on('data', oldDataEvent);
+        if (!wasRaw) {
+          raw(false);
         }
-
-        if (oldKeypressEvent) {
-          stdin.on('keypress', oldKeypressEvent);
-          stdin.emit('keypress', null, { name: 'enter' });
+        if (oldKeypressListeners.length > 0) {
+          oldKeypressListeners.forEach(function (l) {
+            stdin.on('keypress', l);
+          });
+          stdin.emit('keypress', '\r', { name: 'enter', ctrl: false, meta: false, shift: false });
+          stdin.resume();
         }
         else {
           stdin.pause();
         }
         stdin.removeListener('keypress', listener);
-        tty.setRawMode(false);
       }
 
     }
   };
 
-  if (oldKeypressEvent) {
-
-    stdin = process.stdin;
+  function raw (mode) {
+    var setRawMode = stdin.setRawMode || tty.setRawMode;
+    setRawMode.call(stdin, mode);
   }
-  else {
 
-    stdin = process.openStdin();
-    tty.setRawMode(true);
+  stdin = process.stdin;
+  stdin.resume();
+
+  var wasRaw;
+  if ('isRaw' in stdin) {
+    wasRaw = stdin.isRaw
+  } else {
+    // node < v0.7.7, assume yes, makes running in the repl work
+    wasRaw = true
   }
+  raw(true);
+
+
+  // node >= v0.7.7, "keypress" events don't automatically get emitted
+  if (rl.emitKeypressEvents) {
+    rl.emitKeypressEvents(stdin);
+  }
+
+  // grab hold of stdin's "keypress" listeners array
+  var keypressListeners = stdin.listeners('keypress');
+
+  // remove any current "keypress" listeners
+  var oldKeypressListeners = keypressListeners.splice(0);
 
   stdin.on('keypress', listener);
 
-  if (oldKeypressEvent) {
-    stdin.removeListener('keypress', oldKeypressEvent);
-  }
-
-  if (oldDataEvent) {
-    stdin.removeListener('data', oldDataEvent);
-  }
+  // dont remove any "data" listeners, because one of
+  // them is the one that generates the "keypress" events
 
   process.nextTick(function() {
-    
+
     up();
     write('\033[K\r');
     write('\033[K\r\n');
@@ -691,4 +694,3 @@ module.exports = function dir (obj, options) {
   });
 
 };
-
