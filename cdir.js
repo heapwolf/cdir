@@ -597,8 +597,8 @@ module.exports = function dir (obj, options) {
     //
     if (key && searchmode === false) {
 
-      var downAction = (key.name === 'tab' && !key.shift) || key.name === 'down';
-      var upAction = (key.shift && key.name === 'tab') || key.name === 'up';
+      var downAction = (key.name === 'tab' && !key.shift) || key.name === 'down' || key.name === 'j';
+      var upAction = (key.shift && key.name === 'tab') || key.name === 'up' || key.name === 'k';
 
       if (downAction && selection < displayed) {
 
@@ -628,7 +628,8 @@ module.exports = function dir (obj, options) {
       // if this is a toggle.
       //
       if ((key.name === 'space' || key.name === 'enter' || 
-            key.name === 'right' || key.name === 'left') &&
+            key.name === 'right' || key.name === 'left' || 
+            key.name === 'h' || key.name === 'l') &&
           (meta[index].type === 'array' || meta[index].type === 'object' ||
             meta[index].type === 'function' || meta[index].type === 'string')
               && selection <= displayed) {
