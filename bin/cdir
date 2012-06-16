@@ -1,12 +1,34 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
-console.dir = require('../cdir');
+var vm = require('vm');
 
 var filename = process.argv[2];
+var subject = '';
 
-if (!filename) {
-  throw new Error('Requires a filename');
+if (filename) {
+  // read the contents of the given filename
+  fs.readFile(filename, 'utf8', function(err, file) {
+    if (err) throw err;
+    subject = file;
+    cdir();
+  });
+} else {
+  // read the contents of stdin
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', function(data) {
+    subject += data;
+  });
+  process.stdin.on('end', function() {
+    cdir();
+  });
+  process.stdin.resume();
+  filename = '[stdin]';
 }
 
-console.dir(JSON.parse(fs.readFileSync(filename)));
+function cdir() {
+  var sandbox = {};
+  subject = vm.runInNewContext('(' + subject + ')', sandbox, filename);
+  console.dir = require('../cdir');
+  console.dir(subject);
+}
