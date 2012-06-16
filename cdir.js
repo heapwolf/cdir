@@ -1,13 +1,15 @@
 var tty = require('tty');
+var ttys = require('ttys');
 var rl = require('readline');
 
-var stdin;
+var stdin = ttys.stdin;
+var stdout = ttys.stdout;
 
 //
 // shorthand write to stdout
 //
 var write = function write (s) {
-  process.stdout.write(s);
+  stdout.write(s);
 }
 
 //
@@ -132,7 +134,6 @@ if (typeof JSON.decycle !== 'function') {
 //
 module.exports = function dir (obj, options) {
 
-  var stdin;
   var displayed = 0;
   var copybuffer = 0;
 
@@ -170,7 +171,7 @@ module.exports = function dir (obj, options) {
 
       var buffer = '';
       var description = ws(indent, true);
-      var maxWidth = process.stdout.getWindowSize()[0] - indent - 6;
+      var maxWidth = stdout.getWindowSize()[0] - indent - 6;
 
       for (var i = 0, cpos = 0, l = str.length; i < l; i++, cpos++) {
 
@@ -217,8 +218,8 @@ module.exports = function dir (obj, options) {
         var truncatedNode = '0';
         var truncated = false;
 
-          if (node.length > process.stdout.getWindowSize()[0] - extLen) {
-            truncatedNode = '▸ ' + '\033[31m"' + node.substr(0, process.stdout.getWindowSize()[0]/2) + '..."\033[0m';
+          if (node.length > stdout.getWindowSize()[0] - extLen) {
+            truncatedNode = '▸ ' + '\033[31m"' + node.substr(0, stdout.getWindowSize()[0]/2) + '..."\033[0m';
             truncated = true;
           }
           else {
@@ -444,10 +445,10 @@ module.exports = function dir (obj, options) {
       // include that before the prompt as the default.
       //
       if (lastsearch !== '') {
-        process.stdout.write('(' + lastsearch + ') /');
+        stdout.write('(' + lastsearch + ') /');
       }
       else {
-        process.stdout.write('/');
+        stdout.write('/');
       }
     }
     else if (searchmode === true && typeof key !== 'undefined' && key.name === 'backspace') {
@@ -652,7 +653,6 @@ module.exports = function dir (obj, options) {
     setRawMode.call(stdin, mode);
   }
 
-  stdin = process.stdin;
   stdin.resume();
 
   var wasRaw;
