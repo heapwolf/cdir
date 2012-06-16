@@ -21,6 +21,9 @@
   "bin": {
     "cdir": "./bin/cdir"
   },
+  "dependencies": {
+    "ttys": "*"
+  },
   "engines" : ["node >= 0.6.x"],
   "main" : "./cdir",
   "scripts": { 
