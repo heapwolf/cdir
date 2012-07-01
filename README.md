@@ -28,7 +28,7 @@ There is a CLI version too if you want to use it. `npm install cdir -g`.
 
 ```js
 
-console.dir = require('../dir');
+console.dir = require('cdir');
 
 var stuff = { 
   "name" : "cdir", 
