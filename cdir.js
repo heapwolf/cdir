@@ -649,7 +649,7 @@ module.exports = function dir (obj, options) {
   };
 
   function raw (mode) {
-    var setRawMode = stdin.setRawMode || tty.setRawMode;
+    var setRawMode = stdin.setRawMode || process.stdin.setRawMode;
     setRawMode.call(stdin, mode);
   }
 
