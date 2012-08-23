@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/hij1nx/cdir.png)](http://travis-ci.org/hij1nx/cdir)
 # Synopsis
 An interactive representation of an object for the CLI similar to that of console.dir() in webkit.
 
