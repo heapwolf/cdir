@@ -125,7 +125,7 @@ if (typeof JSON.decycle !== 'function') {
         break;
         }
 
-    }(object, '[Curcular]'));
+    }(object, '[Circular]'));
   };
 }
 
