@@ -2,8 +2,13 @@ var tty = require('tty');
 var ttys = require('ttys');
 var rl = require('readline');
 
+var decycle = require('cycle').decycle;
+var ansi    = require('ansi-escapes');
+var chalk   = require('chalk');
+
 var stdin = ttys.stdin;
 var stdout = ttys.stdout;
+
 
 //
 // shorthand write to stdout
@@ -16,34 +21,21 @@ var write = function write (s) {
 // move the cursor upward on the screen
 //
 var up = function up (i, save) {
-
-  i = i || 1;
-
-  if (i > 0) {
-    while(i--) {
-      write(!save ? '\033[K\033[1A\r' : '\033[1A\r');
-    }
-  }
+  i = i+1 || 1;
+  if (save)
+    write(ansi.cursorUp(i));
+  else
+    write(ansi.eraseLines(i));
 };
 
-var right = function right (i) {
-
-  i = i || 1;
-
-  if (i > 0) {
-    while(i--) {
-      write('\033[1C\r');
-    }
-  }
-};
 
 //
 // generate whitespace
 //
 var ws = function ws (i, multiplier) {
-  
+
   var s = '';
-  
+
   if (multiplier) {
     i = i * 2;
   }
@@ -54,80 +46,31 @@ var ws = function ws (i, multiplier) {
   return s;
 };
 
-var getType = function getType (o) {
-
-  if (typeof o === 'string' || typeof o === 'number' || 
-    typeof o === 'boolean' || typeof o === 'function') {
-    return typeof o;
-  }
-  else if (({}).toString.call(o) === '[object RegExp]') {
-    return 'regexp';
-  }
-  else if (Array.isArray(o)) {
-    return 'array';
-  }
-  else if (typeof o === 'undefined') {
-    return 'undefined';
-  }
-  else if (({}).toString.call(o) === '[object Null]') {
-    return 'null';
-  }
-  else if (({}).toString.call(o) === '[object Object]') {
-    return 'object';
-  }
-};
-
-//
-// hande cyclical references
-//
-if (typeof JSON.decycle !== 'function') {
-  JSON.decycle = function decycle (object) {
-
-    var objects = [],
-        paths = [];
-
-    return (function derez (value, path) {
-
-      var name, nu;
-
-      switch (typeof value) {
-        case 'object':
-
-          if (!value) {
-            return null;
-          }
-
-          for (var i = 0; i < objects.length; i += 1) {
-            if (objects[i] === value) {
-              return '[Circular]';
-            }
-          }
-
-          objects.push(value);
-          paths.push(path);
-
-          if (Object.prototype.toString.apply(value) === '[object Array]') {
-            nu = [];
-            for (var i = 0; i < value.length; i += 1) {
-              nu[i] = derez(value[i], path + '[' + i + ']');
-            }
-          } 
-          else {
-
-            nu = {};
-            for (name in value) {
-              nu[name] = derez(value[name], path + '[' + JSON.stringify(name) + ']');
-            }
-          }
-          return nu;
-        default:
-          return value;
-        break;
-        }
-
-    }(object, '[Circular]'));
-  };
+// type is same as returned by typeof
+var typeofType = {
+  'string': 1,
+  'number': 1,
+  'boolean': 1,
+  'function': 1,
+  'undefined': 1
 }
+
+var stringifiedType = {
+  '[object RegExp]': 'regexp',
+  '[object Date]'  : 'date',
+  '[object Array]' : 'array',
+  '[object Null]'  : 'null',
+  '[object Object]': 'object',
+}
+
+var getType = function getType (o) {
+  var t = typeof o;
+  if (typeofType[t]) {
+    return t;
+  }
+  var stringified = ({}).toString.call(o);
+  return stringifiedType[stringified];
+};
 
 //
 // the main export
@@ -182,7 +125,7 @@ module.exports = function dir (obj, options) {
           cpos = 0;
 
           meta.push({
-            description: description + '\033[31m"' + buffer + '"\033[0m',
+            description: description + chalk.red('"' + buffer + '"'),
             expanded: false,
             displayed: first,
             type: type,
@@ -198,7 +141,7 @@ module.exports = function dir (obj, options) {
       if (buffer.length > 0) {
 
         meta.push({
-          description: description + '\033[31m"' + buffer + '"\033[0m',
+          description: description + chalk.red('"' + buffer + '"'),
           expanded: false,
           displayed: first,
           type: type,
@@ -219,11 +162,11 @@ module.exports = function dir (obj, options) {
         var truncated = false;
 
           if (node.length > stdout.getWindowSize()[0] - extLen) {
-            truncatedNode = '▸ ' + '\033[31m"' + node.substr(0, stdout.getWindowSize()[0]/2) + '..."\033[0m';
+            truncatedNode = '▸ ' + chalk.red('"' + node.substr(0, stdout.getWindowSize()[0]/2) + '..."');
             truncated = true;
           }
           else {
-            truncatedNode = '\033[31m"' + node + '"\033[0m';
+            truncatedNode = chalk.red('"' + node + '"');
           }
 
           meta.push({
@@ -247,7 +190,7 @@ module.exports = function dir (obj, options) {
       case 'null':
 
         meta.push({
-          description: itemPrefix + '\033[31m' + node + '\033[0m',
+          description: itemPrefix + chalk.red(node),
           expanded: false,
           displayed: first,
           type: type,
@@ -259,7 +202,7 @@ module.exports = function dir (obj, options) {
       case 'function':
 
         meta.push({
-          description: itemPrefix + '▸ \033[36m[Function]\033[0m',
+          description: itemPrefix + '▸ ' + chalk.yellow('[Function]'),
           expanded: false,
           displayed: first,
           type: type,
@@ -291,7 +234,7 @@ module.exports = function dir (obj, options) {
       case 'array':
 
         meta.push({
-          description: itemPrefix + '▸ \033[36mArray[\033[0m' + node.length + '\033[36m]\033[0m',
+          description: itemPrefix + '▸ ' + chalk.cyan('Array[') + node.length + chalk.cyan(']'),
           expanded: false,
           displayed: first,
           type: type,
@@ -312,8 +255,8 @@ module.exports = function dir (obj, options) {
       break;
       case 'object':
 
-        meta.push({ 
-          description: itemPrefix + '▸ \033[36mObject\033[0m',
+        meta.push({
+          description: itemPrefix + '▸ ' + chalk.cyan('Object'),
           expanded: false,
           displayed: first,
           type: type,
@@ -347,9 +290,9 @@ module.exports = function dir (obj, options) {
         displayed++;
 
         if (displayed === selection) {
-          write('\033[30;47m');
-          write(meta[i].description.replace(/\033\[[0-9;]*m/g, '') + '\n');
-          write('\033[0m');
+          write(chalk.black.bgWhite(
+            meta[i].description.replace(/\033\[[0-9;]*m/g, '') + '\n'
+          ));
         }
         else {
           write(meta[i].description + '\n');
@@ -367,8 +310,8 @@ module.exports = function dir (obj, options) {
     var started = false;
     var toggledCount = 0;
 
-    if (meta[index].type === 'string' && 
-      (meta[index].description.indexOf('▸') === -1 && 
+    if (meta[index].type === 'string' &&
+      (meta[index].description.indexOf('▸') === -1 &&
       meta[index].description.indexOf('▾') === -1)) {
       return;
     }
@@ -441,7 +384,7 @@ module.exports = function dir (obj, options) {
       searchbuffer = '';
 
       //
-      // show the user a prompt, if they did a search, 
+      // show the user a prompt, if they did a search,
       // include that before the prompt as the default.
       //
       if (lastsearch !== '') {
@@ -452,7 +395,7 @@ module.exports = function dir (obj, options) {
       }
     }
     else if (searchmode === true && typeof key !== 'undefined' && key.name === 'backspace') {
-      
+
       //
       // dont delete more characters than the user has entered.
       //
@@ -616,8 +559,8 @@ module.exports = function dir (obj, options) {
       //
       // if this is a toggle.
       //
-      if ((key.name === 'space' || key.name === 'enter' || 
-            key.name === 'right' || key.name === 'left' || 
+      if ((key.name === 'space' || key.name === 'enter' ||
+            key.name === 'right' || key.name === 'left' ||
             key.name === 'h' || key.name === 'l') &&
           (meta[index].type === 'array' || meta[index].type === 'object' ||
             meta[index].type === 'function' || meta[index].type === 'string')
@@ -684,10 +627,9 @@ module.exports = function dir (obj, options) {
   process.nextTick(function() {
 
     up();
-    write('\033[K\r');
-    write('\033[K\r\n');
-
-    var dobj = JSON.decycle(obj);
+    write(ansi.eraseEndLine + '\r');
+    write(ansi.eraseEndLine + '\r\n');
+    var dobj = decycle(obj);
 
     constructMeta(getType(dobj), 0, dobj);
     renderMeta();
