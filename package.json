@@ -1,7 +1,7 @@
-{ 
-  "name" : "cdir", 
-  "description" : "An interactive console.dir() for the terminal.",
-  "tags" : [
+{
+  "name": "cdir",
+  "description": "An interactive console.dir() for the terminal.",
+  "tags": [
     "console",
     "debug",
     "debugging",
@@ -9,24 +9,29 @@
     "interactive",
     "prompt"
   ],
-  "version" : "0.1.2",
-  "author" : "Paolo Fragomeni <paolo@nodejisu.com>",
-  "repository" : {
-    "type" : "git",
-    "url" : "http://github.com/hij1nx/cdir.git"
+  "version": "0.1.2",
+  "author": "Paolo Fragomeni <paolo@nodejisu.com>",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/hij1nx/cdir.git"
   },
-  "bugs" : { 
-    "url" : "http://github.com/hij1nx/cdir/issues" 
+  "bugs": {
+    "url": "http://github.com/hij1nx/cdir/issues"
   },
   "bin": {
     "cdir": "./bin/cdir"
   },
   "dependencies": {
-    "ttys": "*"
+    "ansi-escapes": "^1.3.0",
+    "chalk": "^1.1.3",
+    "cycle": "^1.0.3",
+    "ttys": "0.0.3"
   },
-  "engines" : ["node >= 0.6.x"],
-  "main" : "./cdir",
-  "scripts": { 
+  "engines": [
+    "node >= 0.6.x"
+  ],
+  "main": "./cdir",
+  "scripts": {
     "test": "node tests/test.js"
   }
 }
